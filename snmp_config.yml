@@ -1,0 +1,28 @@
+---
+- hosts: sw1
+  gather_facts: no
+  vars:
+    - user: "GCPNTT"
+    - password: "test123"
+    - priv_password: "asdfasf"
+    - group: "GCPNTT"
+    - access_list: "NTT-SNMP-ALLOWED"
+    - snmp_view: "NTTVIEW"
+  tasks:
+    - name: Configure access list
+      ios_config:
+        lines:
+          - "permit 10.240.0.0 0.0.255.255"
+          - "permit 100.65.33.64 0.0.0.31"
+        parents: ip access-list standard {{ access_list }}
+
+    - name: Test SNMP user config
+      ios_config:
+        lines:
+          - "snmp-server view {{ snmp_view }} internet included"
+          - "snmp-server group {{ group }} v3 priv read {{ snmp_view }}"      
+          - "snmp-server user {{ user }} {{ group }} v3 auth sha {{ password }} priv des {{ priv_password }} access {{ access_list }}"
+
+    - name: Save configuration
+      ios_config:
+        save_when: modified      
